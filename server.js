@@ -169,7 +169,7 @@ ${JSON.stringify(responseSchema)}
 聊天记录如下：
 ${chatText}`;
 
-const server = http.createServer(async (req, res) => {
+async function handleRequest(req, res) {
   try {
     const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -247,11 +247,17 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     return sendJson(res, error.statusCode || 500, { error: error.message || "服务异常" });
   }
-});
+}
 
-server.listen(PORT, () => {
-  console.log(`职聊凭证 AI running at http://localhost:${PORT}`);
-});
+const server = http.createServer(handleRequest);
+
+if (require.main === module) {
+  server.listen(PORT, () => {
+    console.log(`职聊凭证 AI running at http://localhost:${PORT}`);
+  });
+}
+
+module.exports = handleRequest;
 
 function normalizeConfig(input) {
   const hasClientConfig = input && Object.keys(input).length > 0;
