@@ -7,7 +7,7 @@ const { spawn } = require("node:child_process");
 loadEnv(path.join(__dirname, ".env"));
 
 const PORT = Number(process.env.PORT || 5177);
-const publicRoot = __dirname;
+const publicRoot = path.join(__dirname, "public");
 
 const mimeTypes = {
   ".html": "text/html; charset=utf-8",

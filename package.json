@@ -5,6 +5,6 @@
   "description": "招聘沟通承诺提取与确认系统原型",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check app.js"
+    "check": "node --check server.js && node --check public/app.js && node --check api/[...path].js"
   }
 }
