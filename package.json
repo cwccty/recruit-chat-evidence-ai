@@ -1,0 +1,10 @@
+{
+  "name": "recruit-chat-evidence-ai",
+  "version": "0.2.0",
+  "private": true,
+  "description": "招聘沟通承诺提取与确认系统原型",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check app.js"
+  }
+}

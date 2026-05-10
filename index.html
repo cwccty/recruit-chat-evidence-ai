@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>职聊凭证 AI</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="workspace-panel">
+        <div class="brand-row">
+          <div class="brand-mark">职</div>
+          <div>
+            <h1>职聊凭证 AI</h1>
+            <p>招聘沟通承诺提取与确认系统</p>
+          </div>
+        </div>
+
+        <div class="input-tabs" aria-label="输入方式">
+          <button class="tab-button active" data-tab="text">文本</button>
+          <button class="tab-button" data-tab="image">截图</button>
+          <button class="tab-button" data-tab="api">API</button>
+          <button class="tab-button" data-tab="history">历史</button>
+          <button class="tab-button" data-tab="rights">维权</button>
+          <button class="tab-button" data-tab="prompt">提示词</button>
+        </div>
+
+        <div class="mode-row">
+          <label class="switch-line" for="ai-mode">
+            <input id="ai-mode" type="checkbox" />
+            <span>使用真实大模型</span>
+          </label>
+          <span id="api-status">正在检测 API 状态</span>
+        </div>
+
+        <section class="tab-view active" id="text-view">
+          <label for="chat-input">招聘聊天记录</label>
+          <div class="case-grid">
+            <input id="case-candidate" type="text" placeholder="候选人" />
+            <input id="case-company" type="text" placeholder="公司名称" />
+            <input id="case-position" type="text" placeholder="岗位名称" />
+            <input id="case-recruiter" type="text" placeholder="沟通对象" />
+          </div>
+          <textarea id="chat-input" spellcheck="false"></textarea>
+          <div class="control-row">
+            <button class="primary-action" id="analyze-button">分析记录</button>
+            <button class="secondary-action" id="save-record-button">保存记录</button>
+            <button class="icon-action" id="sample-one" title="载入样例 1">1</button>
+            <button class="icon-action" id="sample-two" title="载入样例 2">2</button>
+          </div>
+        </section>
+
+        <section class="tab-view" id="image-view">
+          <label for="image-input">聊天截图</label>
+          <div class="upload-box">
+            <input id="image-input" type="file" accept="image/*" />
+            <div id="image-preview" class="image-preview">选择截图后可进行 OCR 识别</div>
+          </div>
+          <button class="secondary-action" id="use-ocr-demo">识别并分析截图</button>
+        </section>
+
+        <section class="tab-view" id="api-view">
+          <div class="form-grid">
+            <label for="provider-select">接口类型</label>
+            <select id="provider-select">
+              <option value="openai-responses">OpenAI Responses</option>
+              <option value="deepseek">DeepSeek</option>
+              <option value="newapi">New API</option>
+            </select>
+
+            <label for="api-key-input">API Key</label>
+            <input id="api-key-input" type="password" autocomplete="off" placeholder="sk-..." />
+
+            <label for="base-url-input">Base URL</label>
+            <input id="base-url-input" type="url" placeholder="https://api.openai.com/v1" />
+
+            <label for="model-input">模型</label>
+            <input id="model-input" type="text" placeholder="gpt-4.1-mini" />
+          </div>
+          <div class="control-row">
+            <button class="primary-action" id="test-api-button">检测接入</button>
+            <button class="secondary-action" id="list-models-button">检测模型</button>
+            <button class="secondary-action" id="save-api-button">保存配置</button>
+          </div>
+          <button class="secondary-action full-action" id="use-server-config-button">使用服务端 .env 配置</button>
+          <div class="api-help" id="api-help"></div>
+          <input class="filter-input" id="model-filter" type="search" placeholder="过滤模型名称" />
+          <div class="model-list" id="model-list"></div>
+        </section>
+
+        <section class="tab-view" id="history-view">
+          <div class="history-head">
+            <label>本地历史记录</label>
+            <button class="secondary-action" id="clear-history-button">清空历史</button>
+          </div>
+          <div class="api-help">历史记录保存在当前浏览器本地，适合比赛演示多次分析和回填。</div>
+          <div class="history-list" id="history-list"></div>
+        </section>
+
+        <section class="tab-view" id="rights-view">
+          <label for="actual-situation">入职后实际情况</label>
+          <textarea id="actual-situation" spellcheck="false" placeholder="例如：入职后发现实际薪资只有 5K，没有绩效细则；公司说转正后才缴社保；工作地点被调到外地；试岗 3 天没有工资。"></textarea>
+          <div class="control-row">
+            <button class="primary-action" id="generate-rights-button">生成维权材料</button>
+            <button class="secondary-action" id="copy-rights-button">复制材料</button>
+            <button class="secondary-action" id="export-rights-button">导出材料</button>
+            <button class="secondary-action" id="export-case-package-button">导出证据包</button>
+          </div>
+          <div class="api-help">开启真实大模型后，会结合承诺提取结果、原始聊天记录和入职后实际情况生成 AI 维权咨询准备材料；未开启时使用本地模板生成。</div>
+          <div class="api-help">用于整理咨询材料，不替代律师意见。可带着材料咨询劳动监察、法律援助或律师。</div>
+        </section>
+
+        <section class="tab-view" id="prompt-view">
+          <div class="api-help">技术附录：这里展示结构化抽取提示词，答辩时可用于说明 AI 如何把聊天记录转成 JSON 和确认单。</div>
+          <label for="prompt-output">结构化抽取提示词</label>
+          <textarea id="prompt-output" spellcheck="false" readonly></textarea>
+          <button class="secondary-action" id="copy-prompt">复制提示词</button>
+        </section>
+
+        <div class="status-strip">
+          <span id="status-dot"></span>
+          <span id="status-text">等待输入聊天记录</span>
+        </div>
+      </aside>
+
+      <section class="result-panel">
+        <header class="result-header">
+          <div>
+            <p class="eyebrow">Evidence Workspace</p>
+            <h2>沟通确认工作台</h2>
+          </div>
+          <div class="header-actions">
+            <button class="secondary-action" id="copy-report">复制确认单</button>
+            <button class="secondary-action" id="export-json">导出 JSON</button>
+            <button class="secondary-action" id="export-md">导出 Markdown</button>
+            <button class="secondary-action" id="print-report">打印</button>
+          </div>
+        </header>
+
+        <div class="summary-band">
+          <div>
+            <span class="metric" id="confirmed-count">0</span>
+            <p>已确认事项</p>
+          </div>
+          <div>
+            <span class="metric warn" id="missing-count">0</span>
+            <p>待确认事项</p>
+          </div>
+          <div>
+            <span class="metric risk" id="risk-count">0</span>
+            <p>风险提醒</p>
+          </div>
+          <div>
+            <span class="metric score" id="completeness-count">0%</span>
+            <p>信息完整度</p>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <section class="surface">
+            <div class="surface-title">
+              <h3>已确认事项</h3>
+              <span>含来源原文</span>
+            </div>
+            <div id="confirmed-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>未确认事项</h3>
+              <span>面试前建议补齐</span>
+            </div>
+            <div id="missing-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>风险提醒</h3>
+              <span>沟通风险提示</span>
+            </div>
+            <div id="risk-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>建议追问</h3>
+              <span>可直接发送给 HR</span>
+            </div>
+            <div id="question-list" class="item-list"></div>
+          </section>
+        </div>
+
+        <div class="insight-grid">
+          <section class="surface">
+            <div class="surface-title">
+              <h3>风险雷达</h3>
+              <span>自动归类</span>
+            </div>
+            <div id="risk-radar" class="radar-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>证据时间线</h3>
+              <span>按原文顺序</span>
+            </div>
+            <div id="evidence-timeline" class="timeline-list"></div>
+          </section>
+
+          <section class="surface confirm-script">
+            <div class="surface-title">
+              <h3>HR 确认话术</h3>
+              <span>可直接复制</span>
+            </div>
+            <pre id="hr-script-output"></pre>
+            <button class="secondary-action full-action" id="copy-hr-script">复制话术</button>
+          </section>
+        </div>
+
+        <section class="document-surface" id="report-section">
+          <div class="document-head">
+            <div>
+              <p class="eyebrow">Generated Confirmation</p>
+              <h3>招聘沟通确认单</h3>
+            </div>
+            <span id="generated-time"></span>
+          </div>
+          <pre id="report-output"></pre>
+        </section>
+
+        <section class="document-surface" id="rights-section">
+          <div class="document-head">
+            <div>
+              <p class="eyebrow">Rights Assistance</p>
+              <h3>维权求助材料</h3>
+            </div>
+            <span id="rights-generated-time"></span>
+          </div>
+          <pre id="rights-output">填写入职后实际情况后，可生成维权求助材料。</pre>
+        </section>
+
+        <div class="rights-grid">
+          <section class="surface">
+            <div class="surface-title">
+              <h3>差异焦点</h3>
+              <span>自动比对</span>
+            </div>
+            <div id="rights-dispute-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>证据补齐</h3>
+              <span>咨询前准备</span>
+            </div>
+            <div id="rights-evidence-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>咨询问题</h3>
+              <span>可直接询问</span>
+            </div>
+            <div id="rights-question-list" class="item-list"></div>
+          </section>
+
+          <section class="surface">
+            <div class="surface-title">
+              <h3>行动路线</h3>
+              <span>先后顺序</span>
+            </div>
+            <div id="rights-action-list" class="item-list"></div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
